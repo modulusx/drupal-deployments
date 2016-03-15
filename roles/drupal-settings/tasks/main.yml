@@ -1,0 +1,73 @@
+---
+# tasks file for drupal
+- name: "Create conf directory"
+  file: path={{ item.path }} state=directory
+  with_items:
+    - { path: '/docker/{{ drupal_name }}' }
+    - { path: '/docker/volumes/{{ drupal_name }}' }
+    - { path: '/docker/volumes/{{ drupal_name }}/mariadb-data' }
+
+- name: "Create default and files directory"
+  file: path={{ item.path }} state=directory
+  with_items:
+    - { path: '/docker/volumes/{{ drupal_name }}/default' }
+    - { path: '/docker/volumes/{{ drupal_name }}/default/files' }
+
+- name: "Extract files directory"
+  unarchive: src=files.tar.gz dest='/docker/volumes/{{ drupal_name }}/default'
+
+- name: "Fix filesytem permissions"
+  file: path={{ item.path }} state=directory mode=777
+  with_items:
+    - { path: '/docker/volumes/{{ drupal_name }}/default/files' }
+    - { path: '/docker/volumes/{{ drupal_name }}/default/files/config_/sync' }
+    - { path: '/docker/volumes/{{ drupal_name }}/default/files/css' }
+    - { path: '/docker/volumes/{{ drupal_name }}/default/files/js' }
+    - { path: '/docker/volumes/{{ drupal_name }}/default/files/php' }
+    - { path: '/docker/volumes/{{ drupal_name }}/default/files/styles' }
+
+- name: "Copy default settings.php and services.yml"
+  copy: src={{ item.path }} dest=/docker/volumes/{{ drupal_name }}/default
+  with_items:
+    - { path: 'default.settings.php' }
+    - { path: 'default.services.yml' }
+
+- name: "Create drupal settings.php from template"
+  template: src=drupal-settings.php.j2 dest=/docker/volumes/{{ drupal_name }}/default/settings.php mode=444
+
+- name: "Create initial database from template"
+  template: src=initialized.mrk.j2 dest=/docker/volumes/{{ drupal_name }}/mariadb-data/initialized.mrk
+
+- name: "Create database import script"
+  template: src=importddb.sh.j2 dest=/docker/volumes/{{ drupal_name }}/mariadb-data/importddb.sh mode=755
+
+- name: "Add url to {{ inventory_hostname }} index.html"
+  lineinfile:
+    dest=/docker/volumes/nginx/index.html
+    line="<a href='https://{{ drupal_hostname }}'>{{ drupal_hostname }}</a><br/>"
+
+- name: "Create nginx drupal.conf from template"
+  template: src=nginx.conf.j2 dest=/docker/volumes/nginx/conf.d/{{ drupal_name }}.conf
+  notify: 
+   - reload nginx
+
+- name: "Create docker-compose.yml from template"
+  template: src=docker-compose.yml.j2 dest=/docker/{{ drupal_name }}/docker-compose.yml
+
+- name: "Copy upstart script"
+  template: src=docker_drupal.conf.j2 dest=/etc/init/docker_{{ drupal_name }}.conf
+
+- name: "Pull docker images"
+  shell: 'docker pull {{ item.key }}:{{ item.value.tag }}'
+  with_dict: "{{ docker_images }}"
+
+- name: "Start drupal and mariadb containers"
+  service: name=docker_{{ drupal_name }} state=started enabled=yes
+
+- name: "Waiting for mariadb to finish starting"
+  pause: seconds=20
+
+- name: "Import preconfigured database"
+  shell: 'docker exec -it {{ drupal_name }}_mariadb bash -c "/var/lib/mysql/importddb.sh"'
+  args:
+    chdir: /docker/volumes/{{ drupal_name }}/mariadb-data/

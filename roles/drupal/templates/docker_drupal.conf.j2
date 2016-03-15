@@ -1,0 +1,15 @@
+description "{{ drupal_name }} container"
+author "Matt Kunkel"
+start on filesystem and started docker
+stop on runlevel [!2345]
+#respawn
+chdir /docker/{{ drupal_name }}/
+script
+  # Wait for docker to finish starting up first.
+  FILE=/var/run/docker.sock
+  while [ ! -e $FILE ] ; do
+    inotifywait -t 2 -e create $(dirname $FILE)
+  done
+  # Start the nginx Container
+  /usr/local/bin/docker-compose up -d
+end script

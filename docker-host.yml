@@ -1,0 +1,8 @@
+# docker host playbook
+- hosts: docker01.example.com
+  become: yes
+  become_method: sudo
+  vars:
+    dockerhost_user: ec2-user
+  roles:
+  - { role: docker-host }

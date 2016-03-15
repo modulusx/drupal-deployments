@@ -1,0 +1,5 @@
+# ping playbook
+- hosts: all
+  tasks:
+    - name: Testing connection to {{ inventory_hostname }}
+      ping:

@@ -1,0 +1,26 @@
+{{ drupal_name }}_mariadb_data:
+  container_name: {{ drupal_name }}_mariadb_data
+  image: busybox:latest
+  volumes:
+    - /docker/volumes/{{ drupal_name }}/mariadb-data:/var/lib/mysql
+
+{{ drupal_name }}_mariadb:
+  container_name: {{ drupal_name }}_mariadb
+  image: mariadb:latest
+  volumes_from:
+    - {{ drupal_name }}_mariadb_data
+  environment:
+    - MYSQL_ROOT_PASSWORD={{ drupaldb_rootpass }}
+    - MYSQL_DATABASE={{ drupaldb_name }}
+    - MYSQL_USER={{ drupaldb_user }}
+    - MYSQL_PASSWORD={{ drupaldb_pass }}
+
+{{ drupal_name }}_drupal:
+  container_name: {{ drupal_name }}_drupal
+  image: drupal:latest
+  volumes:
+    - /docker/volumes/{{ drupal_name }}/default2:/var/www/html/sites/default2
+  ports:
+    - "{{ drupal_port }}:80"
+  links:
+    - {{ drupal_name }}_mariadb:{{ drupal_name }}.maria.db

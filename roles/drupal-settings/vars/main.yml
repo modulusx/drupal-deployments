@@ -1,0 +1,14 @@
+---
+# vars file for drupal
+arguments:
+  created_year_month: "{{ arguments.created_year_month }}"
+  fid: "{{ arguments.fid }}"
+  tid: "{{ arguments.tid }}"
+fid: "{{ fid }}"
+raw_arguments:
+  tid: "{{ raw_arguments.tid }}"
+docker_images:
+  drupal:
+    tag: "8.0.5-apache"
+  mariadb:
+    tag: "10.1.2"

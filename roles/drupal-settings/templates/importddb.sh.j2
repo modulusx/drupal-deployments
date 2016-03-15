@@ -1,0 +1,3 @@
+#!/bin/sh
+export TERM dumb
+mysql --user={{ drupaldb_user }} --password={{ drupaldb_pass }} < /var/lib/mysql/initialized.mrk

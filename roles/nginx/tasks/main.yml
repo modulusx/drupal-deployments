@@ -1,0 +1,35 @@
+---
+# tasks file for nginx
+- name: "Create conf and volume directories"
+  file: path={{ item.path }} state=directory recurse=yes
+  with_items:
+    - { path: '/docker/volumes/nginx/conf.d' }
+    - { path: '/docker/nginx' }
+
+- name: "Create nginx.conf from template"
+  template: src=nginx.conf.j2 dest=/docker/volumes/nginx/nginx.conf
+
+- name: "Create index.html from template"
+  template: src=index.html.j2 dest=/docker/volumes/nginx/index.html
+
+- name: "Copy SSL certificates"
+  copy: src={{ item.path }} dest=/docker/volumes/nginx/{{ item.path }}
+  with_items:
+    - { path: 'nginx.key' }
+    - { path: 'nginx.crt' }
+
+- name: "Copy docker-compose.yml"
+  copy: src=docker-compose.yml dest=/docker/nginx/docker-compose.yml
+
+- name: "Copy upstart script"
+  copy: src=docker_nginx.conf dest=/etc/init/docker_nginx.conf
+
+- name: "Update docker init.d script"
+  lineinfile: dest=/etc/init.d/docker line='initctl emit docker-started'
+
+- name: "Pull docker images"
+  shell: 'docker pull {{ item }}'
+  with_items: "{{ docker_images }}"
+
+- name: "Start nginx container"
+  service: name=docker_nginx state=started enabled=yes

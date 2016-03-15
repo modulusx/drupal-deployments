@@ -1,0 +1,18 @@
+# drupal playbook
+- hosts: docker01.example.com
+  become: yes
+  become_method: sudo
+  vars:
+    drupal_name: drupal01
+    drupal_hostname: "{{ drupal_name }}.example.com"
+    drupal_ip: "{{ ansible_default_ipv4.address }}"
+    drupal_port: 8081
+    drupaldb_host: "{{ drupal_name }}.maria.db"
+    drupaldb_port: 3306
+    drupaldb_user: "{{ drupal_name }}"
+    drupaldb_pass: "SECRET"
+    drupaldb_rootpass: "SECRET2"
+    drupaldb_name: "{{ drupal_name }}"
+    drupaldb_pre: "{{ drupal_name }}_"
+  roles:
+  - { role: drupal-settings }

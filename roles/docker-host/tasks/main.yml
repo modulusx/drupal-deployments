@@ -1,0 +1,17 @@
+---
+# tasks file for docker-host
+- name: "Amazon | Installation"
+  include: amazon.yml
+  when: ansible_distribution == "Amazon"
+
+- name: "RedHat | Installation"
+  include: rhel.yml
+  when: ansible_distribution == "RedHat"
+
+- name: "Debian | Installation"
+  include: debian.yml
+  when: ansible_distribution == "Debian"
+
+- name: "Ubuntu | Installation"
+  include: ubuntu.yml
+  when: ansible_distribution == "Ubuntu"

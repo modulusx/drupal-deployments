@@ -1,0 +1,4 @@
+---
+# handlers file for drupal
+- name: reload nginx
+  shell: 'docker restart docker_nginx'

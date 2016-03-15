@@ -1,0 +1,5 @@
+---
+# vars file for nginx
+docker_images:
+  nginx:
+    tag: "latest"
